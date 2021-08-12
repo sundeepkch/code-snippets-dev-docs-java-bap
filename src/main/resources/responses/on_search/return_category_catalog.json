@@ -1,0 +1,78 @@
+{
+    "context": {
+        "domain": "local_retail",
+        "country": "string",
+        "city": "string",
+        "action": "on_search",
+        "core_version": "string",
+        "bap_id": "string",
+        "bap_uri": "string",
+        "bpp_id": "string",
+        "bpp_uri": "string",
+        "transaction_id": "string",
+        "message_id": "string",
+        "timestamp": "2021-06-23T09:53:38.872Z",
+        "key": "string",
+        "ttl": "string"
+    },
+    "message": {
+        "catalog": {
+            "bpp/descriptor": {
+                "name": "ShopX"
+            },
+            "bpp/providers": [
+                {
+                    "id": "./local-retail.kirana/ind.blr/naveen-stores@lrdn.bpp.shopx.com.provider",
+                    "descriptor": {
+                        "name": "Pooja Stores"
+                    },
+                    "categories": [
+                        {
+                            "id": "./local-retail.kirana/ind.blr/pooja-stores.breads@lrdn.bpp.shopx.com.provider_category",
+                            "descriptor": {
+                                "name": "Breads"
+                            }
+                        },
+                        {
+                            "id": "./local-local-retail.kirana/ind.blr/pooja-stores.dairy@lrdn.bpp.shopx.com.provider_category",
+                            "descriptor": {
+                                "name": "Dairy"
+                            }
+                        }
+                    ],
+                    "matched": true
+                },
+                {
+                    "id": "./local-retail.kirana/ind.blr/nilgiris@lrdn.bpp.shopx.com.provider",
+                    "descriptor": {
+                        "name": "Nilgiris"
+                    },
+                    "categories": [
+                        {
+                            "id": "./local-retail.kirana/ind.blr/nilgiris.bread-and-dairy@lrdn.bpp.shopx.com.provider_category",
+                            "descriptor": {
+                                "name": "Bread and Dairy"
+                            }
+                        }
+                    ],
+                    "matched": true
+                },
+                {
+                    "id": "./local-retail.kirana/ind.blr/natures-basket@lrdn.bpp.shopx.com.provider",
+                    "descriptor": {
+                        "name": "Nature's basket"
+                    },
+                    "categories": [
+                        {
+                            "id": "./local-retail.kirana/ind.blr/natures-basket.bread-and-dairy@lrdn.bpp.shopx.com.provider_category",
+                            "descriptor": {
+                                "name": "Bread and Dairy"
+                            }
+                        }
+                    ],
+                    "matched": false
+                }
+            ]
+        }
+    }
+}
