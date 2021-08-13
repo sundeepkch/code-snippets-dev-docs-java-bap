@@ -37,9 +37,8 @@ public class BapCallbackApplicationService {
         //TODO: Construct and return error
         if (!isHeadersValid) return null;
 
-        //TODO Store the data received based on message id for the client to poll
-
-        System.out.println("Received response or Message ID :: " + request.getContext().getMessageId());
+        // Store the data received based on message id for the client to poll
+        saveToDB(request);
 
         return Response.of("ACK", null);
     }
@@ -50,5 +49,13 @@ public class BapCallbackApplicationService {
                 !CollectionUtils.isEmpty(headers.get(HttpHeaders.AUTHORIZATION));
     }
 
+    /**
+     * Method to save the received search response to DB.
+     * To be retrieved later by the Client by Message ID.
+     *
+     * @param request Request object to be saved to DB
+     */
+    private void saveToDB(OnSearchRequest request) {
 
+    }
 }

@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
 
@@ -20,6 +21,7 @@ public class Provider {
     private Descriptor descriptor;
     @JsonProperty("category_id")
     private String categoryId;
+    private BigDecimal rating;
     private Time time;
     private List<Category> categories;
     private List<Fulfillment> fulfillments;

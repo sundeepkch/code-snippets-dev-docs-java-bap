@@ -2,10 +2,12 @@ package org.beckn.bap.service;
 
 import org.beckn.bap.common.RestApiClient;
 import org.beckn.bap.dto.bap.*;
+import org.beckn.bap.dto.client.ClientResponse;
 import org.beckn.bap.dto.client.ClientSearchRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.Date;
 import java.util.List;
@@ -17,28 +19,66 @@ public class BapApplicationService {
     @Autowired
     private RestApiClient apiClient;
 
-    public String searchByDropLocation(ClientSearchRequest request, HttpHeaders headers) {
+    public ClientResponse search(ClientSearchRequest request, HttpHeaders headers) {
         var messageId = UUID.randomUUID().toString();
+
+        // Check and create transaction id if not passed
+        var txnId = StringUtils.hasText(request.getTransactionId())
+                ? request.getTransactionId()
+                : UUID.randomUUID().toString();
+
+        // Construct the request
         var context = Context.builder().domain(request.getDomain())
                 .action(Context.ActionEnum.search)
                 .messageId(messageId)
+                .transactionId(txnId)
                 .transactionId(UUID.randomUUID().toString())
                 .timestamp(new Date().toString())
                 .build();
-        var intent = Intent.builder().fulfillment(
-                Fulfillment.builder().type("home-delivery")
-                        .end(FulfillmentStart.builder()
-                                .location(Location.builder()
-                                        .gps(request.getEndLocation())
-                                        .build())
+        var intentBuilder = Intent.builder();
+
+        //construct fulfilment
+        intentBuilder = intentBuilder.fulfillment(Fulfillment.builder()
+                .type(request.getType())
+                .start(FulfillmentStart.builder()
+                        .location(Location.builder()
+                                .gps(request.getEndLocation())
                                 .build())
                         .build())
-                .build();
+                .end(FulfillmentStart.builder()
+                        .location(Location.builder()
+                                .gps(request.getEndLocation())
+                                .build())
+                        .build()).build());
+        //construct item
+        intentBuilder = intentBuilder.item(Item.builder()
+                .id(request.getItemId())
+                .descriptor(Descriptor.builder()
+                        .name(request.getItemName())
+                        .code(request.getItemCode())
+                        .build())
+                .price(Price.builder()
+                        .currency("INR") //Read currency from network
+                        .minimumValue(request.getMinPrice())
+                        .maximumValue(request.getMaxPrice())
+                        .build())
+                .build());
+
+        //construct provider
+        intentBuilder = intentBuilder.provider(Provider.builder()
+                .id(request.getSellerId())
+                .rating(request.getRating())
+                .descriptor(Descriptor.builder()
+                        .name(request.getSellerName())
+                        .build())
+                .build());
 
         var searchRequest = SearchRequest.builder()
                 .context(context)
                 .message(SearchMessage.builder()
-                        .intent(intent).build()).build();
+                        .intent(intentBuilder.build()).build()).build();
+
+        System.out.println(searchRequest);
 
         var url = lookUp(headers);
         //Call BPP Search api
@@ -50,8 +90,19 @@ public class BapApplicationService {
             //TODO Return custom error to the client
             return null;
         }
-        return messageId;
+        return ClientResponse.of(messageId, txnId);
     }
+
+    /**
+     * Method to fetch the data from DB based on the message id
+     * @param messageId Message id of the search response
+     * @return search response
+     */
+    public OnSearchRequest getSearchData(String messageId) {
+        //TODO logic to fetch the search response based on the message id goes here.
+        return new OnSearchRequest();
+    }
+
 
     /**
      * Method to construct response headers to call BPP/BG
