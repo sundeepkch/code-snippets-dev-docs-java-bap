@@ -1,0 +1,35 @@
+{
+    "context": {
+        "domain": "local_retail",
+        "country": "string",
+        "city": "string",
+        "action": "on_search",
+        "core_version": "string",
+        "bap_id": "string",
+        "bap_uri": "string",
+        "bpp_id": "string",
+        "bpp_uri": "string",
+        "transaction_id": "string",
+        "message_id": "string",
+        "timestamp": "2021-06-23T09:53:38.872Z",
+        "key": "string",
+        "ttl": "string"
+    },
+    "message": {
+        "catalog": {
+            "bpp/descriptor": {
+                "name": "ShopX"
+            },
+            "bpp/fulfillments": [
+                {
+                    "id": "./retail.kirana/ind.blr/home-delivery@lrdn.bpp.shopx.com.fulfillment",
+                    "type": "home-delivery"
+                },
+                {
+                    "id": "./retail.kirana/ind.blr/store-pickup@lrdn.bpp.shopx.com.fulfillment",
+                    "type": "store-pickup"
+                }
+            ]
+        }
+    }
+}
