@@ -3,8 +3,7 @@ package org.beckn.bap.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.beckn.bap.client.BapApiClient;
 import org.beckn.bap.common.RestApiClient;
-import org.beckn.bap.dto.bap.OnSearchRequest;
-import org.beckn.bap.dto.bap.Response;
+import org.beckn.bap.dto.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
@@ -31,7 +30,179 @@ public class BapCallbackApplicationService {
      * @param headers The headers received from BAP which needs to be validated
      * @return The response with ACK-NACK
      */
-    public Response OnSearch(OnSearchRequest request, HttpHeaders headers) {
+    public Response onSearch(OnSearchRequest request, HttpHeaders headers) {
+        // Validate the headers
+        var isHeadersValid = validateHeaders(headers);
+        //TODO: Construct and return error
+        if (!isHeadersValid) return null;
+
+        // Store the data received based on message id for the client to poll
+        saveToDB(request);
+
+        return Response.of("ACK", null);
+    }
+
+    /**
+     * Function that receives the response from BPP.
+     *
+     * @param request The request body
+     * @param headers The headers received from BAP which needs to be validated
+     * @return The response with ACK-NACK
+     */
+    public Response onSelect(OnSelectRequest request, HttpHeaders headers) {
+        // Validate the headers
+        var isHeadersValid = validateHeaders(headers);
+        //TODO: Construct and return error
+        if (!isHeadersValid) return null;
+
+        // Store the data received based on message id for the client to poll
+        saveToDB(request);
+
+        return Response.of("ACK", null);
+    }
+
+
+    /**
+     * Function that receives the response from BPP.
+     *
+     * @param request The request body
+     * @param headers The headers received from BAP which needs to be validated
+     * @return The response with ACK-NACK
+     */
+    public Response onInit(OnInitRequest request, HttpHeaders headers) {
+        // Validate the headers
+        var isHeadersValid = validateHeaders(headers);
+        //TODO: Construct and return error
+        if (!isHeadersValid) return null;
+
+        // Store the data received based on message id for the client to poll
+        saveToDB(request);
+
+        return Response.of("ACK", null);
+    }
+
+    /**
+     * Function that receives the response from BPP/BG.
+     *
+     * @param request The request body
+     * @param headers The headers received from BAP which needs to be validated
+     * @return The response with ACK-NACK
+     */
+    public Response onConfirm(OnConfirmRequest request, HttpHeaders headers) {
+        // Validate the headers
+        var isHeadersValid = validateHeaders(headers);
+        //TODO: Construct and return error
+        if (!isHeadersValid) return null;
+
+        // Store the data received based on message id for the client to poll
+        saveToDB(request);
+
+        return Response.of("ACK", null);
+    }
+
+    /**
+     * Function that receives the response from BPP/BG.
+     *
+     * @param request The request body
+     * @param headers The headers received from BAP which needs to be validated
+     * @return The response with ACK-NACK
+     */
+    public Response onTrack(OnTrackRequest request, HttpHeaders headers) {
+        // Validate the headers
+        var isHeadersValid = validateHeaders(headers);
+        //TODO: Construct and return error
+        if (!isHeadersValid) return null;
+
+        // Store the data received based on message id for the client to poll
+        saveToDB(request);
+
+        return Response.of("ACK", null);
+    }
+
+    /**
+     * Function that receives the response from BPP/BG.
+     *
+     * @param request The request body
+     * @param headers The headers received from BAP which needs to be validated
+     * @return The response with ACK-NACK
+     */
+    public Response onCancel(OnCancelRequest request, HttpHeaders headers) {
+        // Validate the headers
+        var isHeadersValid = validateHeaders(headers);
+        //TODO: Construct and return error
+        if (!isHeadersValid) return null;
+
+        // Store the data received based on message id for the client to poll
+        saveToDB(request);
+
+        return Response.of("ACK", null);
+    }
+
+    /**
+     * Function that receives the response from BPP/BG.
+     *
+     * @param request The request body
+     * @param headers The headers received from BAP which needs to be validated
+     * @return The response with ACK-NACK
+     */
+    public Response onUpdate(OnUpdateRequest request, HttpHeaders headers) {
+        // Validate the headers
+        var isHeadersValid = validateHeaders(headers);
+        //TODO: Construct and return error
+        if (!isHeadersValid) return null;
+
+        // Store the data received based on message id for the client to poll
+        saveToDB(request);
+
+        return Response.of("ACK", null);
+    }
+
+    /**
+     * Function that receives the response from BPP/BG.
+     *
+     * @param request The request body
+     * @param headers The headers received from BAP which needs to be validated
+     * @return The response with ACK-NACK
+     */
+    public Response onStatus(OnStatusRequest request, HttpHeaders headers) {
+        // Validate the headers
+        var isHeadersValid = validateHeaders(headers);
+        //TODO: Construct and return error
+        if (!isHeadersValid) return null;
+
+        // Store the data received based on message id for the client to poll
+        saveToDB(request);
+
+        return Response.of("ACK", null);
+    }
+
+    /**
+     * Function that receives the response from BPP/BG.
+     *
+     * @param request The request body
+     * @param headers The headers received from BAP which needs to be validated
+     * @return The response with ACK-NACK
+     */
+    public Response onRating(OnRatingRequest request, HttpHeaders headers) {
+        // Validate the headers
+        var isHeadersValid = validateHeaders(headers);
+        //TODO: Construct and return error
+        if (!isHeadersValid) return null;
+
+        // Store the data received based on message id for the client to poll
+        saveToDB(request);
+
+        return Response.of("ACK", null);
+    }
+
+    /**
+     * Function that receives the response from BPP/BG.
+     *
+     * @param request The request body
+     * @param headers The headers received from BAP which needs to be validated
+     * @return The response with ACK-NACK
+     */
+    public Response onSupport(OnSupportRequest request, HttpHeaders headers) {
         // Validate the headers
         var isHeadersValid = validateHeaders(headers);
         //TODO: Construct and return error
@@ -55,7 +226,7 @@ public class BapCallbackApplicationService {
      *
      * @param request Request object to be saved to DB
      */
-    private void saveToDB(OnSearchRequest request) {
+    private void saveToDB(Object request) {
 
     }
 }

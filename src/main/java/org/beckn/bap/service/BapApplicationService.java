@@ -1,14 +1,14 @@
 package org.beckn.bap.service;
 
 import org.beckn.bap.common.RestApiClient;
-import org.beckn.bap.dto.bap.*;
-import org.beckn.bap.dto.client.ClientResponse;
-import org.beckn.bap.dto.client.ClientSearchRequest;
+import org.beckn.bap.dto.*;
+import org.beckn.bap.web.api.client.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -38,31 +38,9 @@ public class BapApplicationService {
         var intentBuilder = Intent.builder();
 
         //construct fulfilment
-        intentBuilder = intentBuilder.fulfillment(Fulfillment.builder()
-                .type(request.getType())
-                .start(FulfillmentStart.builder()
-                        .location(Location.builder()
-                                .gps(request.getEndLocation())
-                                .build())
-                        .build())
-                .end(FulfillmentStart.builder()
-                        .location(Location.builder()
-                                .gps(request.getEndLocation())
-                                .build())
-                        .build()).build());
+        intentBuilder = intentBuilder.fulfillment(ClientAssembler.of(request.getFulfilment()));
         //construct item
-        intentBuilder = intentBuilder.item(Item.builder()
-                .id(request.getItemId())
-                .descriptor(Descriptor.builder()
-                        .name(request.getItemName())
-                        .code(request.getItemCode())
-                        .build())
-                .price(Price.builder()
-                        .currency("INR") //Read currency from network
-                        .minimumValue(request.getMinPrice())
-                        .maximumValue(request.getMaxPrice())
-                        .build())
-                .build());
+        intentBuilder = intentBuilder.item(ClientAssembler.of(request.getItem()));
 
         //construct provider
         intentBuilder = intentBuilder.provider(Provider.builder()
@@ -93,8 +71,355 @@ public class BapApplicationService {
         return ClientResponse.of(messageId, txnId);
     }
 
+    public ClientResponse select(ClientSelectRequest request, HttpHeaders headers) {
+        var messageId = UUID.randomUUID().toString();
+        // Check and create transaction id if not passed
+        var txnId = StringUtils.hasText(request.getTransactionId())
+                ? request.getTransactionId()
+                : UUID.randomUUID().toString();
+
+        // Construct the request
+        var context = Context.builder().domain(request.getDomain())
+                .action(Context.ActionEnum.select)
+                .messageId(messageId)
+                .transactionId(txnId)
+                .transactionId(UUID.randomUUID().toString())
+                .timestamp(new Date().toString())
+                .build();
+
+        var selectRequest = SelectRequest.builder()
+                .context(context)
+                .message(Message.builder().order(Order.builder()
+                        .items(ClientAssembler.of(request.getItems()))
+                        .build()).build())
+                .build();
+
+        var url = lookUp(headers);
+        //Call BPP select api
+        var searchResponse = apiClient.post(url[0] + Context.ActionEnum.select,
+                constructResponseHeaders(),
+                selectRequest,
+                Response.class);
+        if (searchResponse.getBody() == null || searchResponse.getBody().getError() != null) {
+            //TODO Return custom error to the client
+            return null;
+        }
+        return ClientResponse.of(messageId, txnId);
+    }
+
+    public ClientResponse init(ClientInitRequest request, HttpHeaders headers) {
+        var messageId = UUID.randomUUID().toString();
+        // Check and create transaction id if not passed
+        var txnId = StringUtils.hasText(request.getTransactionId())
+                ? request.getTransactionId()
+                : UUID.randomUUID().toString();
+
+        // Construct the request
+        var context = Context.builder().domain(request.getDomain())
+                .action(Context.ActionEnum.init)
+                .messageId(messageId)
+                .transactionId(txnId)
+                .transactionId(UUID.randomUUID().toString())
+                .timestamp(new Date().toString())
+                .build();
+
+        var billing = ClientAssembler.of(request.getBilling());
+        var fulfilment = ClientAssembler.of(request.getFulfilment());
+
+        var initRequest = InitRequest.builder()
+                .context(context)
+                .message(Message.builder().order(Order.builder()
+                        .items(ClientAssembler.of(request.getItems()))
+                        .billing(billing)
+                        .fulfillment(fulfilment)
+                        .build()).build())
+                .build();
+
+        var url = lookUp(headers);
+        //Call BPP select api
+        var responseEntity = apiClient.post(url[0] + Context.ActionEnum.init,
+                constructResponseHeaders(),
+                initRequest,
+                Response.class);
+        if (responseEntity.getBody() == null || responseEntity.getBody().getError() != null) {
+            //TODO Return custom error to the client
+            return null;
+        }
+        return ClientResponse.of(messageId, txnId);
+    }
+
+    public ClientResponse confirmOrder(ClientConfirmUpdateOrderRequest request, HttpHeaders headers) {
+        var messageId = UUID.randomUUID().toString();
+        // Check and create transaction id if not passed
+        var txnId = StringUtils.hasText(request.getTransactionId())
+                ? request.getTransactionId()
+                : UUID.randomUUID().toString();
+
+        // Construct the request
+        var context = Context.builder().domain(request.getDomain())
+                .action(Context.ActionEnum.confirm)
+                .messageId(messageId)
+                .transactionId(txnId)
+                .transactionId(UUID.randomUUID().toString())
+                .timestamp(new Date().toString())
+                .build();
+
+        var items = ClientAssembler.of(request.getItems());
+        var billing = ClientAssembler.of(request.getBilling());
+        var quotation = ClientAssembler.of(request.getQuote());
+        var payment = ClientAssembler.of(request.getPayment());
+        var confirmOrderRequest = ConfirmRequest.builder()
+                .context(context)
+                .message(Message.builder().order(Order.builder()
+                        .billing(billing)
+                        .items(items)
+                        .quote(quotation)
+                        .payment(payment)
+                        .build()).build())
+                .build();
+
+        var url = lookUp(headers);
+        //Call BPP select api
+        var responseEntity = apiClient.post(url[0] + Context.ActionEnum.confirm,
+                constructResponseHeaders(),
+                confirmOrderRequest,
+                Response.class);
+        if (responseEntity.getBody() == null || responseEntity.getBody().getError() != null) {
+            //TODO Return custom error to the client
+            return null;
+        }
+        return ClientResponse.of(messageId, txnId);
+    }
+
+    public ClientResponse orderStatus(ClientOrderRequest request, HttpHeaders headers) {
+        var messageId = UUID.randomUUID().toString();
+        // Check and create transaction id if not passed
+        var txnId = StringUtils.hasText(request.getTransactionId())
+                ? request.getTransactionId()
+                : UUID.randomUUID().toString();
+
+        // Construct the request
+        var context = Context.builder().domain(request.getDomain())
+                .action(Context.ActionEnum.status)
+                .messageId(messageId)
+                .transactionId(txnId)
+                .transactionId(UUID.randomUUID().toString())
+                .timestamp(new Date().toString())
+                .build();
+
+        var statusRequest = StatusRequest.builder()
+                .context(context)
+                .message(StatusMessage.builder().orderId(request.getOrderId()).build())
+                .build();
+
+        var url = lookUp(headers);
+        //Call BPP select api
+        var responseEntity = apiClient.post(url[0] + Context.ActionEnum.status,
+                constructResponseHeaders(),
+                statusRequest,
+                Response.class);
+        if (responseEntity.getBody() == null || responseEntity.getBody().getError() != null) {
+            //TODO Return custom error to the client
+            return null;
+        }
+        return ClientResponse.of(messageId, txnId);
+    }
+
+    public ClientResponse trackOrder(ClientOrderRequest request, HttpHeaders headers) {
+        var messageId = UUID.randomUUID().toString();
+        // Check and create transaction id if not passed
+        var txnId = StringUtils.hasText(request.getTransactionId())
+                ? request.getTransactionId()
+                : UUID.randomUUID().toString();
+
+        // Construct the request
+        var context = Context.builder().domain(request.getDomain())
+                .action(Context.ActionEnum.track)
+                .messageId(messageId)
+                .transactionId(txnId)
+                .transactionId(UUID.randomUUID().toString())
+                .timestamp(new Date().toString())
+                .build();
+
+        var trackRequest = TrackRequest.builder()
+                .context(context)
+                .message(StatusMessage.builder()
+                        .orderId(request.getOrderId())
+                        .callbackUrl(request.getTrackingCallbackUrl())
+                        .build())
+                .build();
+
+        var url = lookUp(headers);
+        //Call BPP select api
+        var responseEntity = apiClient.post(url[0] + Context.ActionEnum.track,
+                constructResponseHeaders(),
+                trackRequest,
+                Response.class);
+        if (responseEntity.getBody() == null || responseEntity.getBody().getError() != null) {
+            //TODO Return custom error to the client
+            return null;
+        }
+        return ClientResponse.of(messageId, txnId);
+    }
+
+    public ClientResponse cancelOrder(ClientOrderRequest request, HttpHeaders headers) {
+        var messageId = UUID.randomUUID().toString();
+        // Check and create transaction id if not passed
+        var txnId = StringUtils.hasText(request.getTransactionId())
+                ? request.getTransactionId()
+                : UUID.randomUUID().toString();
+
+        // Construct the request
+        var context = Context.builder().domain(request.getDomain())
+                .action(Context.ActionEnum.cancel)
+                .messageId(messageId)
+                .transactionId(txnId)
+                .transactionId(UUID.randomUUID().toString())
+                .timestamp(new Date().toString())
+                .build();
+
+        var cancelRequest = CancelRequest.builder()
+                .context(context)
+                .message(CancelMessage.builder()
+                        .orderId(request.getOrderId())
+                        .cancellationReasonId(request.getCancellationReason())
+                        .build())
+                .build();
+
+        var url = lookUp(headers);
+        //Call BPP select api
+        var responseEntity = apiClient.post(url[0] + Context.ActionEnum.cancel,
+                constructResponseHeaders(),
+                cancelRequest,
+                Response.class);
+        if (responseEntity.getBody() == null || responseEntity.getBody().getError() != null) {
+            //TODO Return custom error to the client
+            return null;
+        }
+        return ClientResponse.of(messageId, txnId);
+    }
+
+    public ClientResponse updateOrder(ClientConfirmUpdateOrderRequest request, HttpHeaders headers) {
+        var messageId = UUID.randomUUID().toString();
+        // Check and create transaction id if not passed
+        var txnId = StringUtils.hasText(request.getTransactionId())
+                ? request.getTransactionId()
+                : UUID.randomUUID().toString();
+
+        // Construct the request
+        var context = Context.builder().domain(request.getDomain())
+                .action(Context.ActionEnum.update)
+                .messageId(messageId)
+                .transactionId(txnId)
+                .transactionId(UUID.randomUUID().toString())
+                .timestamp(new Date().toString())
+                .build();
+
+        var items = ClientAssembler.of(request.getItems());
+        var billing = ClientAssembler.of(request.getBilling());
+        var quotation = ClientAssembler.of(request.getQuote());
+        var payment = ClientAssembler.of(request.getPayment());
+        var updateOrderRequest = UpdateRequest.builder()
+                .context(context)
+                .message(UpdateMessage.builder().order(Order.builder()
+                        .id(request.getOrderId())
+                        .state(request.getOrderState())
+                        .billing(billing)
+                        .items(items)
+                        .quote(quotation)
+                        .payment(payment)
+                        .build()).build())
+                .build();
+
+        var url = lookUp(headers);
+        //Call BPP select api
+        var responseEntity = apiClient.post(url[0] + Context.ActionEnum.update,
+                constructResponseHeaders(),
+                updateOrderRequest,
+                Response.class);
+        if (responseEntity.getBody() == null || responseEntity.getBody().getError() != null) {
+            //TODO Return custom error to the client
+            return null;
+        }
+        return ClientResponse.of(messageId, txnId);
+    }
+
+    public ClientResponse rateOrder(ClientRatingRequest request, HttpHeaders headers) {
+        var messageId = UUID.randomUUID().toString();
+        // Check and create transaction id if not passed
+        var txnId = StringUtils.hasText(request.getTransactionId())
+                ? request.getTransactionId()
+                : UUID.randomUUID().toString();
+
+        // Construct the request
+        var context = Context.builder().domain(request.getDomain())
+                .action(Context.ActionEnum.rating)
+                .messageId(messageId)
+                .transactionId(txnId)
+                .transactionId(UUID.randomUUID().toString())
+                .timestamp(new Date().toString())
+                .build();
+
+        var ratingRequest = RatingRequest.builder()
+                .context(context)
+                .message(RatingMessage.builder()
+                        .id(request.getOrderId())
+                        .value(BigDecimal.valueOf(request.getRating()))
+                        .build())
+                .build();
+
+        var url = lookUp(headers);
+        //Call BPP select api
+        var responseEntity = apiClient.post(url[0] + Context.ActionEnum.rating,
+                constructResponseHeaders(),
+                ratingRequest,
+                Response.class);
+        if (responseEntity.getBody() == null || responseEntity.getBody().getError() != null) {
+            //TODO Return custom error to the client
+            return null;
+        }
+        return ClientResponse.of(messageId, txnId);
+    }
+
+    public ClientResponse support(ClientSupportRequest request, HttpHeaders headers) {
+        var messageId = UUID.randomUUID().toString();
+        // Check and create transaction id if not passed
+        var txnId = StringUtils.hasText(request.getTransactionId())
+                ? request.getTransactionId()
+                : UUID.randomUUID().toString();
+
+        // Construct the request
+        var context = Context.builder().domain(request.getDomain())
+                .action(Context.ActionEnum.support)
+                .messageId(messageId)
+                .transactionId(txnId)
+                .transactionId(UUID.randomUUID().toString())
+                .timestamp(new Date().toString())
+                .build();
+
+        var supportRequest = SupportRequest.builder()
+                .context(context)
+                .message(SupportMessage.builder()
+                        .refId(request.getRefId())
+                        .build())
+                .build();
+
+        var url = lookUp(headers);
+        //Call BPP select api
+        var responseEntity = apiClient.post(url[0] + Context.ActionEnum.support,
+                constructResponseHeaders(),
+                supportRequest,
+                Response.class);
+        if (responseEntity.getBody() == null || responseEntity.getBody().getError() != null) {
+            //TODO Return custom error to the client
+            return null;
+        }
+        return ClientResponse.of(messageId, txnId);
+    }
+
     /**
      * Method to fetch the data from DB based on the message id
+     *
      * @param messageId Message id of the search response
      * @return search response
      */
@@ -127,5 +452,6 @@ public class BapApplicationService {
         var uri = "http://localhost:8080/bpp/";
         return new String[]{uri, publicKey};
     }
+
 
 }
