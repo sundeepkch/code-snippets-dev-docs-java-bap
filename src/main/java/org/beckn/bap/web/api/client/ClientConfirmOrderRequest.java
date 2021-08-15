@@ -4,18 +4,19 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ClientSearchRequest {
+public class ClientConfirmOrderRequest {
     private String domain;
     private String transactionId;
+    private String orderId;
+    private String orderState;
+    private List<ClientSelectItemRequest> items;
+    private ClientBilling billing;
     private ClientFulfilment fulfilment;
-    private ClientItem item;
-    private String sellerId;
-    private String sellerName;
-    private BigDecimal rating;
-    private ClientProvider provider;
+    private ClientQuote quote;
+    private ClientPayment payment;
 }

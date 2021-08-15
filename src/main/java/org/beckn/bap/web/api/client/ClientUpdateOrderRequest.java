@@ -9,7 +9,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ClientConfirmUpdateOrderRequest {
+public class ClientUpdateOrderRequest {
     private String domain;
     private String transactionId;
     private String orderId;

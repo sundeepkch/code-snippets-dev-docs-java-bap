@@ -20,11 +20,29 @@ public class ClientAssembler {
                         .name(item.getItemName())
                         .code(item.getItemCode())
                         .build())
+                .time(Time.builder()
+                        .range(TimeRange.builder()
+                                .start(item.getStartTime())
+                                .end(item.getEndTime())
+                                .build())
+                        .build())
                 .price(Price.builder()
                         .currency("INR") //Read currency from network
                         .minimumValue(item.getMinPrice())
                         .maximumValue(item.getMaxPrice())
                         .build())
+                .tags((Tags) item.getTags())
+                .build();
+    }
+
+    public static Provider of(ClientProvider provider) {
+        if(provider == null) return null;
+        return Provider.builder()
+                .id(provider.getProviderId())
+                .descriptor(Descriptor.builder()
+                        .name(provider.getProviderName())
+                        .build())
+                .rating(provider.getProviderRating())
                 .build();
     }
 
@@ -83,6 +101,10 @@ public class ClientAssembler {
                         .state(billing.getAddressState())
                         .country(billing.getAddressCountry())
                         .areaCode(billing.getAddressAreaCode())
+                        .build())
+                .organization(Organization.builder()
+                        .name(billing.getOrganization() == null ? null : billing.getOrganization().getName())
+                        .cred(billing.getOrganization() == null ? null : billing.getOrganization().getCred())
                         .build())
                 .build();
     }

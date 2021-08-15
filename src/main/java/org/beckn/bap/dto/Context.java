@@ -20,8 +20,8 @@ import static java.util.stream.Collectors.toMap;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Context {
     private String domain;
-    private String country; //TODO Country.code
-    private String city; //TODO City.code
+    private String country;
+    private String city;
     private ActionEnum action;
     @JsonProperty("core_version")
     private String coreVersion;

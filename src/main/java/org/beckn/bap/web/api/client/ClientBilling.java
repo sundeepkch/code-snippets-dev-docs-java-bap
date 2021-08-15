@@ -18,4 +18,5 @@ public class ClientBilling {
     private String addressState;
     private String addressCountry;
     private String addressAreaCode;
+    private ClientOrganization organization;
 }

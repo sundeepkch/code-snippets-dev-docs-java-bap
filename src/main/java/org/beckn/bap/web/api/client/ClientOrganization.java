@@ -1,14 +1,17 @@
-package org.beckn.bap.dto;
+package org.beckn.bap.web.api.client;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ProviderLocation {
-    private String id;
+public class ClientOrganization {
+    private String name;
+    private String cred;
 }

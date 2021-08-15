@@ -33,7 +33,7 @@ public class BapCallbackApplicationService {
     public Response onSearch(OnSearchRequest request, HttpHeaders headers) {
         // Validate the headers
         var isHeadersValid = validateHeaders(headers);
-        //TODO: Construct and return error
+        // Construct and return error
         if (!isHeadersValid) return null;
 
         // Store the data received based on message id for the client to poll
@@ -52,7 +52,7 @@ public class BapCallbackApplicationService {
     public Response onSelect(OnSelectRequest request, HttpHeaders headers) {
         // Validate the headers
         var isHeadersValid = validateHeaders(headers);
-        //TODO: Construct and return error
+        // Construct and return error
         if (!isHeadersValid) return null;
 
         // Store the data received based on message id for the client to poll
@@ -72,7 +72,7 @@ public class BapCallbackApplicationService {
     public Response onInit(OnInitRequest request, HttpHeaders headers) {
         // Validate the headers
         var isHeadersValid = validateHeaders(headers);
-        //TODO: Construct and return error
+        // Construct and return error
         if (!isHeadersValid) return null;
 
         // Store the data received based on message id for the client to poll
@@ -91,7 +91,7 @@ public class BapCallbackApplicationService {
     public Response onConfirm(OnConfirmRequest request, HttpHeaders headers) {
         // Validate the headers
         var isHeadersValid = validateHeaders(headers);
-        //TODO: Construct and return error
+        // Construct and return error
         if (!isHeadersValid) return null;
 
         // Store the data received based on message id for the client to poll
@@ -110,7 +110,7 @@ public class BapCallbackApplicationService {
     public Response onTrack(OnTrackRequest request, HttpHeaders headers) {
         // Validate the headers
         var isHeadersValid = validateHeaders(headers);
-        //TODO: Construct and return error
+        // Construct and return error
         if (!isHeadersValid) return null;
 
         // Store the data received based on message id for the client to poll
@@ -129,7 +129,7 @@ public class BapCallbackApplicationService {
     public Response onCancel(OnCancelRequest request, HttpHeaders headers) {
         // Validate the headers
         var isHeadersValid = validateHeaders(headers);
-        //TODO: Construct and return error
+        // Construct and return error
         if (!isHeadersValid) return null;
 
         // Store the data received based on message id for the client to poll
@@ -148,7 +148,7 @@ public class BapCallbackApplicationService {
     public Response onUpdate(OnUpdateRequest request, HttpHeaders headers) {
         // Validate the headers
         var isHeadersValid = validateHeaders(headers);
-        //TODO: Construct and return error
+        // Construct and return error
         if (!isHeadersValid) return null;
 
         // Store the data received based on message id for the client to poll
@@ -167,7 +167,7 @@ public class BapCallbackApplicationService {
     public Response onStatus(OnStatusRequest request, HttpHeaders headers) {
         // Validate the headers
         var isHeadersValid = validateHeaders(headers);
-        //TODO: Construct and return error
+        // Construct and return error
         if (!isHeadersValid) return null;
 
         // Store the data received based on message id for the client to poll
@@ -186,7 +186,7 @@ public class BapCallbackApplicationService {
     public Response onRating(OnRatingRequest request, HttpHeaders headers) {
         // Validate the headers
         var isHeadersValid = validateHeaders(headers);
-        //TODO: Construct and return error
+        // Construct and return error
         if (!isHeadersValid) return null;
 
         // Store the data received based on message id for the client to poll
@@ -205,7 +205,7 @@ public class BapCallbackApplicationService {
     public Response onSupport(OnSupportRequest request, HttpHeaders headers) {
         // Validate the headers
         var isHeadersValid = validateHeaders(headers);
-        //TODO: Construct and return error
+        // Construct and return error
         if (!isHeadersValid) return null;
 
         // Store the data received based on message id for the client to poll
@@ -215,7 +215,7 @@ public class BapCallbackApplicationService {
     }
 
     private boolean validateHeaders(HttpHeaders headers) {
-        //TODO: logic to validate the headers
+        // logic to validate the headers
         return !CollectionUtils.isEmpty(headers.get(HttpHeaders.AUTHORIZATION)) ||
                 !CollectionUtils.isEmpty(headers.get(HttpHeaders.AUTHORIZATION));
     }

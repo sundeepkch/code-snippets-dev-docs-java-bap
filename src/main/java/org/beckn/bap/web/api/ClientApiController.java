@@ -43,7 +43,7 @@ public class ClientApiController {
     @PostMapping(ClientRoutes.CONFIRM_ORDER_API)
     public ResponseEntity confirmOrder(
             @RequestHeader HttpHeaders headers,
-            @RequestBody ClientConfirmUpdateOrderRequest request) {
+            @RequestBody ClientConfirmOrderRequest request) {
         var response = bapApplicationService.confirmOrder(request, headers);
         return ResponseEntity.ok(response);
     }
@@ -75,7 +75,7 @@ public class ClientApiController {
     @PostMapping(ClientRoutes.UPDATE_ORDER_API)
     public ResponseEntity updateOrder(
             @RequestHeader HttpHeaders headers,
-            @RequestBody ClientConfirmUpdateOrderRequest request) {
+            @RequestBody ClientUpdateOrderRequest request) {
         var response = bapApplicationService.updateOrder(request, headers);
         return ResponseEntity.ok(response);
     }

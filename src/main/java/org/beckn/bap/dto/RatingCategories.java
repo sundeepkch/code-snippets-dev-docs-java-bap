@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ProviderLocation {
-    private String id;
+public class RatingCategories extends Category {
+    private String question;
 }
