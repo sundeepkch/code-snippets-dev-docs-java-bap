@@ -16,11 +16,27 @@ public class HealthCareDiagnosticsApiController {
     @Autowired
     private BapApplicationService bapApplicationService;
 
-    @PostMapping("/healthcare_diagnostics/search_by_lab_location")
-    public ResponseEntity searchByLocation(
+    @PostMapping("/healthcare_diagnostics/search_by_lab_name")
+    public ResponseEntity searchByLabName(
             @RequestHeader HttpHeaders headers,
             @RequestBody ClientSearchRequest request) {
-        var response = bapApplicationService.searchByDropLocation(request, headers);
+        var response = bapApplicationService.generateSearchRequest(request, headers);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/healthcare_diagnostics/search_by_price_range")
+    public ResponseEntity searchByPriceRange(
+            @RequestHeader HttpHeaders headers,
+            @RequestBody ClientSearchRequest request) {
+        var response = bapApplicationService.generateSearchRequest(request, headers);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/healthcare_diagnostics/search_nearby")
+    public ResponseEntity searchNearByDiagnostics(
+            @RequestHeader HttpHeaders headers,
+            @RequestBody ClientSearchRequest request) {
+        var response = bapApplicationService.generateSearchRequest(request, headers);
         return ResponseEntity.ok(response);
     }
 
@@ -28,7 +44,7 @@ public class HealthCareDiagnosticsApiController {
     public ResponseEntity searchByAvailableTime(
             @RequestHeader HttpHeaders headers,
             @RequestBody ClientSearchRequest request) {
-        var response = bapApplicationService.searchByItem(request, headers);
+        var response = bapApplicationService.generateSearchRequest(request, headers);
         return ResponseEntity.ok(response);
     }
 
@@ -36,7 +52,7 @@ public class HealthCareDiagnosticsApiController {
     public ResponseEntity selectService(
             @RequestHeader HttpHeaders headers,
             @RequestBody ClientSelectRequest request) {
-        var response = bapApplicationService.addSelectedItems(request, headers);
+        var response = bapApplicationService.generateSelectRequest(request, headers);
         return ResponseEntity.ok(response);
     }
 
@@ -44,52 +60,52 @@ public class HealthCareDiagnosticsApiController {
     public ResponseEntity addBillingDetails(
             @RequestHeader HttpHeaders headers,
             @RequestBody ClientInitRequest request) {
-        var response = bapApplicationService.addBillingDetails(request, headers);
+        var response = bapApplicationService.initializeOrder(request, headers);
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/healthcare_diagnostics/confirm_order")
-    public ResponseEntity confirmOrder(
+    @PostMapping("/healthcare_diagnostics/confirm_prepaird_order")
+    public ResponseEntity confirmPrepaidOrder(
             @RequestHeader HttpHeaders headers,
             @RequestBody ClientConfirmOrderRequest request) {
         var response = bapApplicationService.confirmOrder(request, headers);
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/healthcare_diagnostics/order_status")
-    public ResponseEntity orderStatus(
+    @PostMapping("/healthcare_diagnostics/confirm_postpaid_order")
+    public ResponseEntity confirmPostpaidOrder(
             @RequestHeader HttpHeaders headers,
-            @RequestBody ClientOrderRequest request) {
-        var response = bapApplicationService.orderStatus(request, headers);
+            @RequestBody ClientConfirmOrderRequest request) {
+        var response = bapApplicationService.confirmOrder(request, headers);
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/healthcare_diagnostics/reschedule")
-    public ResponseEntity reschedule(
+    @PostMapping("/healthcare_diagnostics/update_billing_details")
+    public ResponseEntity updateBillingDetails(
             @RequestHeader HttpHeaders headers,
             @RequestBody ClientUpdateOrderRequest request) {
         var response = bapApplicationService.updateOrder(request, headers);
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/healthcare_diagnostics/cancel_order")
-    public ResponseEntity cancelOrder(
+    @PostMapping("/healthcare_diagnostics/cancel_appointment")
+    public ResponseEntity cancelAppointment(
             @RequestHeader HttpHeaders headers,
             @RequestBody ClientOrderRequest request) {
         var response = bapApplicationService.cancelOrder(request, headers);
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/healthcare_diagnostics/rate")
-    public ResponseEntity rate(
+    @PostMapping("/healthcare_diagnostics/rate_lab")
+    public ResponseEntity rateLab(
             @RequestHeader HttpHeaders headers,
             @RequestBody ClientRatingRequest request) {
         var response = bapApplicationService.rateOrder(request, headers);
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/healthcare_diagnostics/get_support")
-    public ResponseEntity getSupport(
+    @PostMapping("/healthcare_diagnostics/contact_lab")
+    public ResponseEntity contactLab(
             @RequestHeader HttpHeaders headers,
             @RequestBody ClientSupportRequest request) {
         var response = bapApplicationService.support(request, headers);
@@ -105,18 +121,18 @@ public class HealthCareDiagnosticsApiController {
         return ResponseEntity.ok(data);
     }
 
-    // Endpoint for the client to poll the selected order catalog based on the message id
+    // Endpoint for the client to poll the select data based on the message id
     @GetMapping("/healthcare_diagnostics/on_select")
-    public ResponseEntity getQuoteForItem(
+    public ResponseEntity selectByMessageId(
             @PathVariable(ClientRoutes.PARAM_MESSAGE_ID) String messageId,
             @RequestHeader HttpHeaders headers) {
-        var data = bapApplicationService.getQuotation(messageId);
+        var data = bapApplicationService.get(messageId);
         return ResponseEntity.ok(data);
     }
 
-    // Endpoint for the client to poll the order billing data based on the message id
+    // Endpoint for the client to poll the init data based on the message id
     @GetMapping("/healthcare_diagnostics/on_init")
-    public ResponseEntity getInitializedOrder(
+    public ResponseEntity initByMessageId(
             @PathVariable(ClientRoutes.PARAM_MESSAGE_ID) String messageId,
             @RequestHeader HttpHeaders headers) {
         var data = bapApplicationService.get(messageId);
@@ -132,16 +148,7 @@ public class HealthCareDiagnosticsApiController {
         return ResponseEntity.ok(data);
     }
 
-    // Endpoint for the client to poll the order status based on the message id
-    @GetMapping("/healthcare_diagnostics/on_order_status")
-    public ResponseEntity onOrderStatus(
-            @PathVariable(ClientRoutes.PARAM_MESSAGE_ID) String messageId,
-            @RequestHeader HttpHeaders headers) {
-        var data = bapApplicationService.get(messageId);
-        return ResponseEntity.ok(data);
-    }
-
-    // Endpoint for the client to poll the updated order details based on the message id
+    // Endpoint for the client to poll the order updateing based on the message id
     @GetMapping("/healthcare_diagnostics/on_update_order")
     public ResponseEntity onUpdateOrder(
             @PathVariable(ClientRoutes.PARAM_MESSAGE_ID) String messageId,

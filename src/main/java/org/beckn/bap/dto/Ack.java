@@ -17,7 +17,11 @@ import static java.util.stream.Collectors.toMap;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Ack {
 
-    private AckNackStatusEnum status;
+    public AckNackStatusEnum status;
+
+    public String getStatus() {
+        return status.getValue();
+    }
 
     public enum AckNackStatusEnum {
         ACK("ACK"),

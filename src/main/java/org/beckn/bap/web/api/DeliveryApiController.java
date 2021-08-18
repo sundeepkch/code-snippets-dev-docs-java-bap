@@ -20,31 +20,31 @@ public class DeliveryApiController {
     public ResponseEntity searchByPickupDrop(
             @RequestHeader HttpHeaders headers,
             @RequestBody ClientSearchRequest request) {
-        var response = bapApplicationService.searchByPickupDrop(request, headers);
+        var response = bapApplicationService.generateSearchRequest(request, headers);
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/delivery/search_by_item")
-    public ResponseEntity searchByItem(
+    @PostMapping("/delivery/search_by_available_timings")
+    public ResponseEntity searchByAvailableTimings(
             @RequestHeader HttpHeaders headers,
             @RequestBody ClientSearchRequest request) {
-        var response = bapApplicationService.searchByItem(request, headers);
+        var response = bapApplicationService.generateSearchRequest(request, headers);
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/delivery/select_items")
-    public ResponseEntity selectItems(
+    @PostMapping("/delivery/search_by_price_range")
+    public ResponseEntity searchByPriceRange(
+            @RequestHeader HttpHeaders headers,
+            @RequestBody ClientSearchRequest request) {
+        var response = bapApplicationService.generateSearchRequest(request, headers);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/delivery/add_service")
+    public ResponseEntity addService(
             @RequestHeader HttpHeaders headers,
             @RequestBody ClientSelectRequest request) {
-        var response = bapApplicationService.addSelectedItems(request, headers);
-        return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/delivery/add_pickup_location")
-    public ResponseEntity addPickupLocation(
-            @RequestHeader HttpHeaders headers,
-            @RequestBody ClientInitRequest request) {
-        var response = bapApplicationService.addPickupLocation(request, headers);
+        var response = bapApplicationService.generateSelectRequest(request, headers);
         return ResponseEntity.ok(response);
     }
 
@@ -52,28 +52,20 @@ public class DeliveryApiController {
     public ResponseEntity addBillingDetails(
             @RequestHeader HttpHeaders headers,
             @RequestBody ClientInitRequest request) {
-        var response = bapApplicationService.addBillingDetails(request, headers);
-        return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/delivery/add_organization")
-    public ResponseEntity addOrgDetails(
-            @RequestHeader HttpHeaders headers,
-            @RequestBody ClientInitRequest request) {
-        var response = bapApplicationService.addOrgDetails(request, headers);
-        return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/delivery/initialize_order")
-    public ResponseEntity initializeOrder(
-            @RequestHeader HttpHeaders headers,
-            @RequestBody ClientInitRequest request) {
         var response = bapApplicationService.initializeOrder(request, headers);
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/delivery/confirm_order")
-    public ResponseEntity confirmOrder(
+    @PostMapping("/delivery/confirm_prepaird_order")
+    public ResponseEntity confirmPrepaidOrder(
+            @RequestHeader HttpHeaders headers,
+            @RequestBody ClientConfirmOrderRequest request) {
+        var response = bapApplicationService.confirmOrder(request, headers);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/delivery/confirm_postpaid_order")
+    public ResponseEntity confirmPostpaidOrder(
             @RequestHeader HttpHeaders headers,
             @RequestBody ClientConfirmOrderRequest request) {
         var response = bapApplicationService.confirmOrder(request, headers);
@@ -96,32 +88,32 @@ public class DeliveryApiController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/delivery/cancel_order")
-    public ResponseEntity cancelOrder(
-            @RequestHeader HttpHeaders headers,
-            @RequestBody ClientOrderRequest request) {
-        var response = bapApplicationService.cancelOrder(request, headers);
-        return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/delivery/set_billing_details")
-    public ResponseEntity setBillingDetails(
+    @PostMapping("/delivery/update_billing_details")
+    public ResponseEntity updateBillingDetails(
             @RequestHeader HttpHeaders headers,
             @RequestBody ClientUpdateOrderRequest request) {
         var response = bapApplicationService.updateOrder(request, headers);
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/delivery/rate")
-    public ResponseEntity rateOrder(
+    @PostMapping("/delivery/update_drop_location")
+    public ResponseEntity updateDropLocation(
+            @RequestHeader HttpHeaders headers,
+            @RequestBody ClientUpdateOrderRequest request) {
+        var response = bapApplicationService.updateOrder(request, headers);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/delivery/rate_delivery")
+    public ResponseEntity rateDelivery(
             @RequestHeader HttpHeaders headers,
             @RequestBody ClientRatingRequest request) {
         var response = bapApplicationService.rateOrder(request, headers);
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/delivery/get_support")
-    public ResponseEntity getSupport(
+    @PostMapping("/delivery/contact_delivery")
+    public ResponseEntity contactDelivery(
             @RequestHeader HttpHeaders headers,
             @RequestBody ClientSupportRequest request) {
         var response = bapApplicationService.support(request, headers);
@@ -137,27 +129,18 @@ public class DeliveryApiController {
         return ResponseEntity.ok(data);
     }
 
-    // Endpoint for the client to poll the selected order catalog based on the message id
+    // Endpoint for the client to poll the select data based on the message id
     @GetMapping("/delivery/on_select")
-    public ResponseEntity getQuoteForItem(
-            @PathVariable(ClientRoutes.PARAM_MESSAGE_ID) String messageId,
-            @RequestHeader HttpHeaders headers) {
-        var data = bapApplicationService.getQuotation(messageId);
-        return ResponseEntity.ok(data);
-    }
-
-    // Endpoint for the client to poll the fulfilled order data based on the message id
-    @GetMapping("/delivery/on_init")
-    public ResponseEntity getUpdatedOrder(
+    public ResponseEntity selectByMessageId(
             @PathVariable(ClientRoutes.PARAM_MESSAGE_ID) String messageId,
             @RequestHeader HttpHeaders headers) {
         var data = bapApplicationService.get(messageId);
         return ResponseEntity.ok(data);
     }
 
-    // Endpoint for the client to poll the order billing data based on the message id
+    // Endpoint for the client to poll the init data based on the message id
     @GetMapping("/delivery/on_init")
-    public ResponseEntity getInitializedOrder(
+    public ResponseEntity initByMessageId(
             @PathVariable(ClientRoutes.PARAM_MESSAGE_ID) String messageId,
             @RequestHeader HttpHeaders headers) {
         var data = bapApplicationService.get(messageId);
@@ -191,16 +174,7 @@ public class DeliveryApiController {
         return ResponseEntity.ok(data);
     }
 
-    // Endpoint for the client to poll the cancelled order based on the message id
-    @GetMapping("/delivery/on_cancel_order")
-    public ResponseEntity onCancelOrder(
-            @PathVariable(ClientRoutes.PARAM_MESSAGE_ID) String messageId,
-            @RequestHeader HttpHeaders headers) {
-        var data = bapApplicationService.get(messageId);
-        return ResponseEntity.ok(data);
-    }
-
-    // Endpoint for the client to poll the updated order details based on the message id
+    // Endpoint for the client to poll the order updateing based on the message id
     @GetMapping("/delivery/on_update_order")
     public ResponseEntity onUpdateOrder(
             @PathVariable(ClientRoutes.PARAM_MESSAGE_ID) String messageId,
@@ -226,5 +200,4 @@ public class DeliveryApiController {
         var data = bapApplicationService.get(messageId);
         return ResponseEntity.ok(data);
     }
-
 }

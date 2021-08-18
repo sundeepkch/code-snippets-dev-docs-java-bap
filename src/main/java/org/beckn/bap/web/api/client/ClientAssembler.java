@@ -35,17 +35,6 @@ public class ClientAssembler {
                 .build();
     }
 
-    public static Provider of(ClientProvider provider) {
-        if(provider == null) return null;
-        return Provider.builder()
-                .id(provider.getProviderId())
-                .descriptor(Descriptor.builder()
-                        .name(provider.getProviderName())
-                        .build())
-                .rating(provider.getProviderRating())
-                .build();
-    }
-
     public static Fulfillment of(ClientFulfilment fulfilment) {
         if (fulfilment == null) return null;
         return Fulfillment.builder()
@@ -70,22 +59,6 @@ public class ClientAssembler {
                                         .build())
                                 .build())
                         .build()).build();
-    }
-
-    public static List<OrderItem> of(List<ClientSelectItemRequest> items) {
-        if (CollectionUtils.isEmpty(items)) return null;
-        var response = new ArrayList<OrderItem>();
-        for (ClientSelectItemRequest itemRequest : items) {
-            response.add(OrderItem.builder()
-                    .id(itemRequest.getId())
-                    .quantity(ItemQuantity.builder()
-                            .selected(ItemQuantityAllocated.builder()
-                                    .count(itemRequest.getQuantity())
-                                    .build())
-                            .build()).build());
-
-        }
-        return response;
     }
 
     public static Billing of(ClientBilling billing) {
@@ -140,5 +113,32 @@ public class ClientAssembler {
                 .status(payment.getStatus())
                 .build();
 
+    }
+
+    public static List<OrderItem> of(List<ClientSelectItemRequest> items) {
+        if (CollectionUtils.isEmpty(items)) return null;
+        var response = new ArrayList<OrderItem>();
+        for (ClientSelectItemRequest itemRequest : items) {
+            response.add(OrderItem.builder()
+                    .id(itemRequest.getId())
+                    .quantity(ItemQuantity.builder()
+                            .selected(ItemQuantityAllocated.builder()
+                                    .count(itemRequest.getQuantity())
+                                    .build())
+                            .build()).build());
+
+        }
+        return response;
+    }
+
+    public static Provider of(ClientProvider provider) {
+        if(provider == null) return null;
+        return Provider.builder()
+                .id(provider.getProviderId())
+                .descriptor(Descriptor.builder()
+                        .name(provider.getProviderName())
+                        .build())
+                .rating(provider.getProviderRating())
+                .build();
     }
 }

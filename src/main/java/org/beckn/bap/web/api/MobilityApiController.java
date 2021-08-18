@@ -16,40 +16,64 @@ public class MobilityApiController {
     @Autowired
     private BapApplicationService bapApplicationService;
 
-    @PostMapping("/mobility/search_by_pickup_and_drop_location")
-    public ResponseEntity searchByPickupDrop(
+    @PostMapping("/mobility/search_by_pickup_location")
+    public ResponseEntity searchByPickupLocation(
             @RequestHeader HttpHeaders headers,
             @RequestBody ClientSearchRequest request) {
-        var response = bapApplicationService.searchByPickupDrop(request, headers);
+        var response = bapApplicationService.generateSearchRequest(request, headers);
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/mobility/select_agency")
-    public ResponseEntity selectAgency(
+    @PostMapping("/mobility/search_by_pickup_drop_location")
+    public ResponseEntity searchByPickupDropLocation(
+            @RequestHeader HttpHeaders headers,
+            @RequestBody ClientSearchRequest request) {
+        var response = bapApplicationService.generateSearchRequest(request, headers);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/mobility/view_by_fare")
+    public ResponseEntity viewByFare(
+            @RequestHeader HttpHeaders headers,
+            @RequestBody ClientSearchRequest request) {
+        var response = bapApplicationService.generateSearchRequest(request, headers);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/mobility/view_by_provider")
+    public ResponseEntity viewByProvider(
+            @RequestHeader HttpHeaders headers,
+            @RequestBody ClientSearchRequest request) {
+        var response = bapApplicationService.generateSearchRequest(request, headers);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/mobility/calculate_fare")
+    public ResponseEntity calculateFare(
+            @RequestHeader HttpHeaders headers,
+            @RequestBody ClientSearchRequest request) {
+        var response = bapApplicationService.generateSearchRequest(request, headers);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/mobility/apply_offer")
+    public ResponseEntity applyOffer(
             @RequestHeader HttpHeaders headers,
             @RequestBody ClientSelectRequest request) {
-        var response = bapApplicationService.selectAgency(request, headers);
+        var response = bapApplicationService.generateSelectRequest(request, headers);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/mobility/select_mobility")
+    public ResponseEntity selectMobility(
+            @RequestHeader HttpHeaders headers,
+            @RequestBody ClientSelectRequest request) {
+        var response = bapApplicationService.generateSelectRequest(request, headers);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/mobility/add_billing")
     public ResponseEntity addBillingDetails(
-            @RequestHeader HttpHeaders headers,
-            @RequestBody ClientInitRequest request) {
-        var response = bapApplicationService.addBillingDetails(request, headers);
-        return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/mobility/add_fulfilment")
-    public ResponseEntity addFulfilmentDetails(
-            @RequestHeader HttpHeaders headers,
-            @RequestBody ClientInitRequest request) {
-        var response = bapApplicationService.addFulfilmentDetails(request, headers);
-        return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/mobility/initialize_order")
-    public ResponseEntity initializeOrder(
             @RequestHeader HttpHeaders headers,
             @RequestBody ClientInitRequest request) {
         var response = bapApplicationService.initializeOrder(request, headers);
@@ -72,14 +96,6 @@ public class MobilityApiController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/mobility/track_order")
-    public ResponseEntity trackOrder(
-            @RequestHeader HttpHeaders headers,
-            @RequestBody ClientOrderRequest request) {
-        var response = bapApplicationService.trackOrder(request, headers);
-        return ResponseEntity.ok(response);
-    }
-
     @PostMapping("/mobility/cancel_order")
     public ResponseEntity cancelOrder(
             @RequestHeader HttpHeaders headers,
@@ -88,24 +104,24 @@ public class MobilityApiController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/mobility/set_billing_details")
-    public ResponseEntity setBillingDetails(
+    @PostMapping("/mobility/track_order")
+    public ResponseEntity trackOrder(
             @RequestHeader HttpHeaders headers,
-            @RequestBody ClientUpdateOrderRequest request) {
-        var response = bapApplicationService.updateOrder(request, headers);
+            @RequestBody ClientOrderRequest request) {
+        var response = bapApplicationService.trackOrder(request, headers);
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/mobility/rate")
-    public ResponseEntity rateOrder(
+    @PostMapping("/mobility/rate_driver")
+    public ResponseEntity rateDriver(
             @RequestHeader HttpHeaders headers,
             @RequestBody ClientRatingRequest request) {
         var response = bapApplicationService.rateOrder(request, headers);
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/mobility/get_support")
-    public ResponseEntity getSupport(
+    @PostMapping("/mobility/contact_provider")
+    public ResponseEntity contactProvider(
             @RequestHeader HttpHeaders headers,
             @RequestBody ClientSupportRequest request) {
         var response = bapApplicationService.support(request, headers);
@@ -117,40 +133,22 @@ public class MobilityApiController {
     public ResponseEntity searchByMessageId(
             @PathVariable(ClientRoutes.PARAM_MESSAGE_ID) String messageId,
             @RequestHeader HttpHeaders headers) {
-        var data = bapApplicationService.getSearchData(messageId);
+        var data = bapApplicationService.get(messageId);
         return ResponseEntity.ok(data);
     }
 
-    // Endpoint for the client to poll the selected order catalog based on the message id
+    // Endpoint for the client to poll the select data based on the message id
     @GetMapping("/mobility/on_select")
-    public ResponseEntity getQuoteForItem(
-            @PathVariable(ClientRoutes.PARAM_MESSAGE_ID) String messageId,
-            @RequestHeader HttpHeaders headers) {
-        var data = bapApplicationService.getQuotation(messageId);
-        return ResponseEntity.ok(data);
-    }
-
-    // Endpoint for the client to poll the order billing data based on the message id
-    @GetMapping("/mobility/on_init")
-    public ResponseEntity getInitializedOrder(
+    public ResponseEntity selectByMessageId(
             @PathVariable(ClientRoutes.PARAM_MESSAGE_ID) String messageId,
             @RequestHeader HttpHeaders headers) {
         var data = bapApplicationService.get(messageId);
         return ResponseEntity.ok(data);
     }
 
-    // Endpoint for the client to poll the fulfilled order data based on the message id
+    // Endpoint for the client to poll the init data based on the message id
     @GetMapping("/mobility/on_init")
-    public ResponseEntity getUpdatedOrder(
-            @PathVariable(ClientRoutes.PARAM_MESSAGE_ID) String messageId,
-            @RequestHeader HttpHeaders headers) {
-        var data = bapApplicationService.get(messageId);
-        return ResponseEntity.ok(data);
-    }
-
-    // Endpoint for the client to poll the details of order data based on the message id
-    @GetMapping("/mobility/initialize_order")
-    public ResponseEntity initializeOrder(
+    public ResponseEntity initByMessageId(
             @PathVariable(ClientRoutes.PARAM_MESSAGE_ID) String messageId,
             @RequestHeader HttpHeaders headers) {
         var data = bapApplicationService.get(messageId);
@@ -175,15 +173,6 @@ public class MobilityApiController {
         return ResponseEntity.ok(data);
     }
 
-    // Endpoint for the client to poll the order tracking based on the message id
-    @GetMapping("/mobility/on_track_order")
-    public ResponseEntity onTrackOrder(
-            @PathVariable(ClientRoutes.PARAM_MESSAGE_ID) String messageId,
-            @RequestHeader HttpHeaders headers) {
-        var data = bapApplicationService.get(messageId);
-        return ResponseEntity.ok(data);
-    }
-
     // Endpoint for the client to poll the cancelled order based on the message id
     @GetMapping("/mobility/on_cancel_order")
     public ResponseEntity onCancelOrder(
@@ -193,9 +182,9 @@ public class MobilityApiController {
         return ResponseEntity.ok(data);
     }
 
-    // Endpoint for the client to poll the updated order details based on the message id
-    @GetMapping("/mobility/on_update_order")
-    public ResponseEntity onUpdateOrder(
+    // Endpoint for the client to poll the order tracking based on the message id
+    @GetMapping("/mobility/on_track_order")
+    public ResponseEntity onTrackOrder(
             @PathVariable(ClientRoutes.PARAM_MESSAGE_ID) String messageId,
             @RequestHeader HttpHeaders headers) {
         var data = bapApplicationService.get(messageId);
@@ -219,5 +208,4 @@ public class MobilityApiController {
         var data = bapApplicationService.get(messageId);
         return ResponseEntity.ok(data);
     }
-
 }

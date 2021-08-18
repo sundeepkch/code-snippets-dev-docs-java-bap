@@ -1,5 +1,6 @@
 package org.beckn.bap.service;
 
+import org.beckn.bap.assembler.BapAssembler;
 import org.beckn.bap.common.RestApiClient;
 import org.beckn.bap.dto.*;
 import org.beckn.bap.web.api.client.*;
@@ -19,7 +20,8 @@ public class BapApplicationService {
     @Autowired
     private RestApiClient apiClient;
 
-    public ClientResponse search(ClientSearchRequest request, HttpHeaders headers) {
+    public Response generateSearchRequest(ClientSearchRequest request, HttpHeaders headers) {
+
         var messageId = UUID.randomUUID().toString();
 
         // Check and create transaction id if not passed
@@ -27,7 +29,8 @@ public class BapApplicationService {
                 ? request.getTransactionId()
                 : UUID.randomUUID().toString();
 
-        // Construct the request
+
+        // Construct the request similar to the example given above
         var context = Context.builder().domain(request.getDomain())
                 .action(Context.ActionEnum.search)
                 .messageId(messageId)
@@ -37,26 +40,38 @@ public class BapApplicationService {
                 .build();
         var intentBuilder = Intent.builder();
 
-        //construct fulfilment
+        // Construct item object for the request from delivery location
         intentBuilder = intentBuilder.fulfillment(ClientAssembler.of(request.getFulfilment()));
-        //construct item
-        intentBuilder = intentBuilder.item(ClientAssembler.of(request.getItem()));
-
-        //construct provider
-        intentBuilder = intentBuilder.provider(Provider.builder()
-                .id(request.getSellerId())
-                .rating(request.getRating())
-                .descriptor(Descriptor.builder()
-                        .name(request.getSellerName())
-                        .build())
-                .build());
 
         var searchRequest = SearchRequest.builder()
                 .context(context)
                 .message(SearchMessage.builder()
                         .intent(intentBuilder.build()).build()).build();
 
-        System.out.println(searchRequest);
+        return invokeSearch(searchRequest, headers);
+    }
+
+    public Response invokeSearch(SearchRequest request, HttpHeaders headers) {
+
+        // Call to look up function which returns the the public key and BPP/BG Endpoint to be called
+        var url = lookUp(headers);
+
+        //Call BPP Search api
+        var responseEntity = apiClient.post(url[0] + Context.ActionEnum.search,
+                constructRequestHeaders(),
+                request,
+                Response.class);
+        if (responseEntity.getBody() == null || responseEntity.getBody().getError() != null ||
+                "NACK".equals(responseEntity.getBody().getMessage().getAck().getStatus())) {
+            // Return custom error to the client
+            return null;
+        }
+        return Response.of("ACK", null);
+    }
+
+    public Response search(ClientSearchRequest request, HttpHeaders headers) {
+
+        var searchRequest = BapAssembler.generateSearchRequest(request);
 
         var url = lookUp(headers);
         //Call BPP Search api
@@ -68,7 +83,7 @@ public class BapApplicationService {
             // Return custom error to the client
             return null;
         }
-        return ClientResponse.of(messageId, txnId);
+        return searchResponse.getBody();
     }
 
     public ClientResponse searchByItem(ClientSearchRequest request, HttpHeaders headers) {
@@ -113,7 +128,8 @@ public class BapApplicationService {
                 Response.class);
 
         // Validate the received response
-        if (responseEntity.getBody() == null || responseEntity.getBody().getError() != null) {
+        if (responseEntity.getBody() == null || responseEntity.getBody().getError() != null ||
+                "NACK".equals(responseEntity.getBody().getMessage().getAck().getStatus())) {
             // Return custom error to the client
             return null;
         }
@@ -268,6 +284,60 @@ public class BapApplicationService {
         return ClientResponse.of(messageId, txnId);
     }
 
+    public Response generateSelectRequest(ClientSelectRequest request, HttpHeaders headers) {
+
+        // Generate message id
+        var messageId = UUID.randomUUID().toString();
+
+        // Check if transaction id exists in the request.
+        // Generate if not exists
+        var txnId = StringUtils.hasText(request.getTransactionId())
+                ? request.getTransactionId()
+                : UUID.randomUUID().toString();
+
+        // Construct the Context based on the request parameters
+        var context = Context.builder().domain(request.getDomain())
+                .action(Context.ActionEnum.select)
+                .messageId(messageId)
+                .transactionId(txnId)
+                .transactionId(UUID.randomUUID().toString())
+                .timestamp(new Date().toString())
+                .build();
+
+        // Construct the protocol specific object to be passed to the BPP/BG
+        // Add the selected item(s) from the catalog to get a draft quote
+        var selectRequest = SelectRequest.builder()
+                .context(context)
+                .message(Message.builder().order(Order.builder()
+                        .items(ClientAssembler.of(request.getItems()))
+                        .build()).build())
+                .build();
+
+
+        return invokeSelect(selectRequest, headers);
+    }
+
+    public Response invokeSelect(SelectRequest request, HttpHeaders headers) {
+
+        // Call to look up function which returns the the public key and BPP Endpoint to be called
+        var url = lookUp(headers);
+
+        // Call BPP Select api from the returned endpoint.
+        // Construct request headers with the public key
+        var responseEntity = apiClient.post(url[0] + Context.ActionEnum.select,
+                constructRequestHeaders(),
+                request,
+                Response.class);
+
+        // Validate the received response
+        if (responseEntity.getBody() == null || responseEntity.getBody().getError() != null ||
+                "NACK".equals(responseEntity.getBody().getMessage().getAck().getStatus())) {
+            // Return custom error to the client
+            return null;
+        }
+        return responseEntity.getBody();
+    }
+
     public ClientResponse select(ClientSelectRequest request, HttpHeaders headers) {
         var messageId = UUID.randomUUID().toString();
         // Check and create transaction id if not passed
@@ -396,6 +466,65 @@ public class BapApplicationService {
         }
         // Return the Message Id & Transaction Id to the Client for polling the response
         return ClientResponse.of(messageId, txnId);
+    }
+
+
+    public Response initializeOrder(ClientInitRequest request, HttpHeaders headers) {
+
+        // Generate message id
+        var messageId = UUID.randomUUID().toString();
+
+        // Check if transaction id exists in the request.
+        // Generate if not exists
+        var txnId = StringUtils.hasText(request.getTransactionId())
+                ? request.getTransactionId()
+                : UUID.randomUUID().toString();
+
+        // Construct the Context based on the request parameters
+        var context = Context.builder().domain(request.getDomain())
+                .action(Context.ActionEnum.init)
+                .messageId(messageId)
+                .transactionId(txnId)
+                .transactionId(UUID.randomUUID().toString())
+                .timestamp(new Date().toString())
+                .build();
+
+        // Construct the protocol specific object to be passed to the BPP
+        // to initialize the order by providing the fulfilment details
+        var items = ClientAssembler.of(request.getItems());
+        var billingDetails = ClientAssembler.of(request.getBilling());
+        var fulfilmentDetails = ClientAssembler.of(request.getFulfilment());
+        var initRequest = InitRequest.builder()
+                .context(context)
+                .message(Message.builder().order(Order.builder()
+                        .items(items)
+                        .billing(billingDetails)
+                        .fulfillment(fulfilmentDetails)
+                        .build()).build())
+                .build();
+
+        return invokeInit(initRequest, headers);
+    }
+
+    public Response invokeInit(InitRequest request, HttpHeaders headers) {
+
+        // Call to look up function which returns the the public key and BPP Endpoint to be called
+        var url = lookUp(headers);
+
+        // Call BPP Init api from the returned endpoint.
+        // Construct request headers with the public key
+        var responseEntity = apiClient.post(url[0] + Context.ActionEnum.init,
+                constructRequestHeaders(),
+                request,
+                Response.class);
+
+        // Validate the received response
+        if (responseEntity.getBody() == null || responseEntity.getBody().getError() != null ||
+                "NACK".equals(responseEntity.getBody().getMessage().getAck().getStatus())) {
+            // Return custom error to the client
+            return null;
+        }
+        return responseEntity.getBody();
     }
 
     public ClientResponse init(ClientInitRequest request, HttpHeaders headers) {
@@ -634,59 +763,8 @@ public class BapApplicationService {
         return ClientResponse.of(messageId, txnId);
     }
 
-    public ClientResponse initializeOrder(ClientInitRequest request, HttpHeaders headers) {
-        // Generate message id
-        var messageId = UUID.randomUUID().toString();
+    public Response confirmOrder(ClientConfirmOrderRequest request, HttpHeaders headers) {
 
-        // Check if transaction id exists in the request.
-        // Generate if not exists
-        var txnId = StringUtils.hasText(request.getTransactionId())
-                ? request.getTransactionId()
-                : UUID.randomUUID().toString();
-
-        // Construct the Context based on the request parameters
-        var context = Context.builder().domain(request.getDomain())
-                .action(Context.ActionEnum.init)
-                .messageId(messageId)
-                .transactionId(txnId)
-                .transactionId(UUID.randomUUID().toString())
-                .timestamp(new Date().toString())
-                .build();
-
-        // Construct the protocol specific object to be passed to the BPP
-        // to initialize the order with full terms for the chosen mobility option
-        var items = ClientAssembler.of(request.getItems());
-        var billingDetails = ClientAssembler.of(request.getBilling());
-        var fulfilmentDetails = ClientAssembler.of(request.getFulfilment());
-        var initRequest = InitRequest.builder()
-                .context(context)
-                .message(Message.builder().order(Order.builder()
-                        .items(items)
-                        .billing(billingDetails)
-                        .fulfillment(fulfilmentDetails)
-                        .build()).build())
-                .build();
-
-        // Call to look up function which returns the the public key and BPP Endpoint to be called
-        var url = lookUp(headers);
-
-        // Call BPP Init api from the returned endpoint.
-        // Construct request headers with the public key
-        var responseEntity = apiClient.post(url[0] + Context.ActionEnum.init,
-                constructRequestHeaders(),
-                initRequest,
-                Response.class);
-
-        // Validate the received response
-        if (responseEntity.getBody() == null || responseEntity.getBody().getError() != null) {
-            // Return custom error to the client
-            return null;
-        }
-        // Return the Message Id & Transaction Id to the Client for polling the response
-        return ClientResponse.of(messageId, txnId);
-    }
-
-    public ClientResponse confirmOrder(ClientConfirmOrderRequest request, HttpHeaders headers) {
         // Generate message id
         var messageId = UUID.randomUUID().toString();
 
@@ -706,10 +784,10 @@ public class BapApplicationService {
                 .build();
 
         // Construct the protocol specific object to be passed to the BPP
-        // to confirm the order with payment details if the request is pay and confirm
+        // to confirm the order for the selected items with payment details
         var items = ClientAssembler.of(request.getItems());
         var billing = ClientAssembler.of(request.getBilling());
-        var fulfilmentDetails = ClientAssembler.of(request.getFulfilment());
+        var fulfilment = ClientAssembler.of(request.getFulfilment());
         var quotation = ClientAssembler.of(request.getQuote());
         var payment = ClientAssembler.of(request.getPayment());
         var confirmOrderRequest = ConfirmRequest.builder()
@@ -717,10 +795,16 @@ public class BapApplicationService {
                 .message(Message.builder().order(Order.builder()
                         .billing(billing)
                         .items(items)
+                        .fulfillment(fulfilment)
                         .quote(quotation)
                         .payment(payment)
                         .build()).build())
                 .build();
+
+        return invokeConfirm(confirmOrderRequest, headers);
+    }
+
+    public Response invokeConfirm(ConfirmRequest request, HttpHeaders headers) {
 
         // Call to look up function which returns the the public key and BPP Endpoint to be called
         var url = lookUp(headers);
@@ -729,19 +813,20 @@ public class BapApplicationService {
         // Construct request headers with the public key
         var responseEntity = apiClient.post(url[0] + Context.ActionEnum.confirm,
                 constructRequestHeaders(),
-                confirmOrderRequest,
+                request,
                 Response.class);
 
         // Validate the received response
-        if (responseEntity.getBody() == null || responseEntity.getBody().getError() != null) {
+        if (responseEntity.getBody() == null || responseEntity.getBody().getError() != null ||
+                "NACK".equals(responseEntity.getBody().getMessage().getAck().getStatus())) {
             // Return custom error to the client
             return null;
         }
-        // Return the Message Id & Transaction Id to the Client for polling the response
-        return ClientResponse.of(messageId, txnId);
+        return Response.of("ACK", null);
     }
 
-    public ClientResponse orderStatus(ClientOrderRequest request, HttpHeaders headers) {
+    public Response orderStatus(ClientOrderRequest request, HttpHeaders headers) {
+
         // Generate message id
         var messageId = UUID.randomUUID().toString();
 
@@ -769,6 +854,11 @@ public class BapApplicationService {
                         .build())
                 .build();
 
+        return invokeStatus(statusRequest, headers);
+    }
+
+    public Response invokeStatus(StatusRequest request, HttpHeaders headers) {
+
         // Call to look up function which returns the the public key and BPP Endpoint to be called
         var url = lookUp(headers);
 
@@ -776,19 +866,20 @@ public class BapApplicationService {
         // Construct request headers with the public key
         var responseEntity = apiClient.post(url[0] + Context.ActionEnum.status,
                 constructRequestHeaders(),
-                statusRequest,
+                request,
                 Response.class);
 
         // Validate the received response
-        if (responseEntity.getBody() == null || responseEntity.getBody().getError() != null) {
+        if (responseEntity.getBody() == null || responseEntity.getBody().getError() != null ||
+                "NACK".equals(responseEntity.getBody().getMessage().getAck().getStatus())) {
             // Return custom error to the client
             return null;
         }
-        // Return the Message Id & Transaction Id to the Client for polling the response
-        return ClientResponse.of(messageId, txnId);
+        return Response.of("ACK", null);
     }
 
-    public ClientResponse trackOrder(ClientOrderRequest request, HttpHeaders headers) {
+    public Response trackOrder(ClientOrderRequest request, HttpHeaders headers) {
+
         // Generate message id
         var messageId = UUID.randomUUID().toString();
 
@@ -808,7 +899,7 @@ public class BapApplicationService {
                 .build();
 
         // Construct the protocol specific object to be passed to the BPP
-        // to track the active trip/order
+        // to track the active order
         var trackRequest = TrackRequest.builder()
                 .context(context)
                 .message(StatusMessage.builder()
@@ -817,6 +908,11 @@ public class BapApplicationService {
                         .build())
                 .build();
 
+        return invokeTrack(trackRequest, headers);
+    }
+
+    public Response invokeTrack(TrackRequest request, HttpHeaders headers) {
+
         // Call to look up function which returns the the public key and BPP Endpoint to be called
         var url = lookUp(headers);
 
@@ -824,19 +920,20 @@ public class BapApplicationService {
         // Construct request headers with the public key
         var responseEntity = apiClient.post(url[0] + Context.ActionEnum.track,
                 constructRequestHeaders(),
-                trackRequest,
+                request,
                 Response.class);
 
         // Validate the received response
-        if (responseEntity.getBody() == null || responseEntity.getBody().getError() != null) {
+        if (responseEntity.getBody() == null || responseEntity.getBody().getError() != null ||
+                "NACK".equals(responseEntity.getBody().getMessage().getAck().getStatus())) {
             // Return custom error to the client
             return null;
         }
-        // Return the Message Id & Transaction Id to the Client for polling the response
-        return ClientResponse.of(messageId, txnId);
+        return Response.of("ACK", null);
     }
 
-    public ClientResponse cancelOrder(ClientOrderRequest request, HttpHeaders headers) {
+    public Response cancelOrder(ClientOrderRequest request, HttpHeaders headers) {
+
         // Generate message id
         var messageId = UUID.randomUUID().toString();
 
@@ -856,7 +953,7 @@ public class BapApplicationService {
                 .build();
 
         // Construct the protocol specific object to be passed to the BPP
-        // to cancel the active trip/order
+        // to cancel the order of given order id
         // The valid cancellation reasons will be fetched by the BPP's /get_cancellation_reasons endpoint
         var cancelRequest = CancelRequest.builder()
                 .context(context)
@@ -866,6 +963,11 @@ public class BapApplicationService {
                         .build())
                 .build();
 
+        return invokeCancel(cancelRequest, headers);
+    }
+
+    public Response invokeCancel(CancelRequest request, HttpHeaders headers) {
+
         // Call to look up function which returns the the public key and BPP Endpoint to be called
         var url = lookUp(headers);
 
@@ -873,19 +975,20 @@ public class BapApplicationService {
         // Construct request headers with the public key
         var responseEntity = apiClient.post(url[0] + Context.ActionEnum.cancel,
                 constructRequestHeaders(),
-                cancelRequest,
+                request,
                 Response.class);
 
         // Validate the received response
-        if (responseEntity.getBody() == null || responseEntity.getBody().getError() != null) {
+        if (responseEntity.getBody() == null || responseEntity.getBody().getError() != null ||
+                "NACK".equals(responseEntity.getBody().getMessage().getAck().getStatus())) {
             // Return custom error to the client
             return null;
         }
-        // Return the Message Id & Transaction Id to the Client for polling the response
-        return ClientResponse.of(messageId, txnId);
+        return Response.of("ACK", null);
     }
 
-    public ClientResponse updateOrder(ClientUpdateOrderRequest request, HttpHeaders headers) {
+    public Response updateOrder(ClientUpdateOrderRequest request, HttpHeaders headers) {
+
         // Generate message id
         var messageId = UUID.randomUUID().toString();
 
@@ -905,7 +1008,7 @@ public class BapApplicationService {
                 .build();
 
         // Construct the protocol specific object to be passed to the BPP
-        // to update the order with the correct billing details
+        // to update the order with the new billing details
         var billing = ClientAssembler.of(request.getBilling());
         var updateOrderRequest = UpdateRequest.builder()
                 .context(context)
@@ -915,6 +1018,11 @@ public class BapApplicationService {
                         .build()).build())
                 .build();
 
+        return invokeUpdate(updateOrderRequest, headers);
+    }
+
+    public Response invokeUpdate(UpdateRequest request, HttpHeaders headers) {
+
         // Call to look up function which returns the the public key and BPP Endpoint to be called
         var url = lookUp(headers);
 
@@ -922,19 +1030,20 @@ public class BapApplicationService {
         // Construct request headers with the public key
         var responseEntity = apiClient.post(url[0] + Context.ActionEnum.update,
                 constructRequestHeaders(),
-                updateOrderRequest,
+                request,
                 Response.class);
 
         // Validate the received response
-        if (responseEntity.getBody() == null || responseEntity.getBody().getError() != null) {
+        if (responseEntity.getBody() == null || responseEntity.getBody().getError() != null ||
+                "NACK".equals(responseEntity.getBody().getMessage().getAck().getStatus())) {
             // Return custom error to the client
             return null;
         }
-        // Return the Message Id & Transaction Id to the Client for polling the response
-        return ClientResponse.of(messageId, txnId);
+        return Response.of("ACK", null);
     }
 
-    public ClientResponse rateOrder(ClientRatingRequest request, HttpHeaders headers) {
+    public Response rateOrder(ClientRatingRequest request, HttpHeaders headers) {
+
         // Generate message id
         var messageId = UUID.randomUUID().toString();
 
@@ -963,6 +1072,11 @@ public class BapApplicationService {
                         .build())
                 .build();
 
+        return invokeRating(ratingRequest, headers);
+    }
+
+    public Response invokeRating(RatingRequest request, HttpHeaders headers) {
+
         // Call to look up function which returns the the public key and BPP Endpoint to be called
         var url = lookUp(headers);
 
@@ -970,19 +1084,20 @@ public class BapApplicationService {
         // Construct request headers with the public key
         var responseEntity = apiClient.post(url[0] + Context.ActionEnum.rating,
                 constructRequestHeaders(),
-                ratingRequest,
+                request,
                 Response.class);
 
         // Validate the received response
-        if (responseEntity.getBody() == null || responseEntity.getBody().getError() != null) {
+        if (responseEntity.getBody() == null || responseEntity.getBody().getError() != null ||
+                "NACK".equals(responseEntity.getBody().getMessage().getAck().getStatus())) {
             // Return custom error to the client
             return null;
         }
-        // Return the Message Id & Transaction Id to the Client for polling the response
-        return ClientResponse.of(messageId, txnId);
+        return Response.of("ACK", null);
     }
 
-    public ClientResponse support(ClientSupportRequest request, HttpHeaders headers) {
+    public Response support(ClientSupportRequest request, HttpHeaders headers) {
+
         // Generate message id
         var messageId = UUID.randomUUID().toString();
 
@@ -1002,13 +1117,18 @@ public class BapApplicationService {
                 .build();
 
         // Construct the protocol specific object to be passed to the BPP
-        // to get the support contact with the id of the entity for which support is required
+        // to get the support contact with the id of the provider
         var supportRequest = SupportRequest.builder()
                 .context(context)
                 .message(SupportMessage.builder()
                         .refId(request.getRefId())
                         .build())
                 .build();
+
+        return invokeSupport(supportRequest, headers);
+    }
+
+    public Response invokeSupport(SupportRequest request, HttpHeaders headers) {
 
         // Call to look up function which returns the the public key and BPP Endpoint to be called
         var url = lookUp(headers);
@@ -1017,16 +1137,16 @@ public class BapApplicationService {
         // Construct request headers with the public key
         var responseEntity = apiClient.post(url[0] + Context.ActionEnum.support,
                 constructRequestHeaders(),
-                supportRequest,
+                request,
                 Response.class);
 
         // Validate the received response
-        if (responseEntity.getBody() == null || responseEntity.getBody().getError() != null) {
+        if (responseEntity.getBody() == null || responseEntity.getBody().getError() != null ||
+                "NACK".equals(responseEntity.getBody().getMessage().getAck().getStatus())) {
             // Return custom error to the client
             return null;
         }
-        // Return the Message Id & Transaction Id to the Client for polling the response
-        return ClientResponse.of(messageId, txnId);
+        return Response.of("ACK", null);
     }
 
     /**
@@ -1073,6 +1193,7 @@ public class BapApplicationService {
         var uri = "http://localhost:8080/bpp/";
         return new String[]{uri, publicKey};
     }
+
 
 
 }

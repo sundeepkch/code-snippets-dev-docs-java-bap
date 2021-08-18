@@ -16,36 +16,75 @@ public class HealthCarePharmacyApiController {
     @Autowired
     private BapApplicationService bapApplicationService;
 
-    @PostMapping("/healthcare_pharmacy/search_by_drop_location")
-    public ResponseEntity searchByDropLocation(
+    @PostMapping("/healthcare_pharmacy/search_by_delivery_location")
+    public ResponseEntity searchByDeliveryLocation(
             @RequestHeader HttpHeaders headers,
             @RequestBody ClientSearchRequest request) {
-        var response = bapApplicationService.searchByDropLocation(request, headers);
+        var response = bapApplicationService.generateSearchRequest(request, headers);
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/healthcare_pharmacy/search_by_item")
-    public ResponseEntity searchByItem(
+    @PostMapping("/healthcare_pharmacy/search_by_home_delivery")
+    public ResponseEntity searchByHomeDelivery(
             @RequestHeader HttpHeaders headers,
             @RequestBody ClientSearchRequest request) {
-        var response = bapApplicationService.searchByItem(request, headers);
+        var response = bapApplicationService.generateSearchRequest(request, headers);
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/healthcare_pharmacy/search_by_seller")
-    public ResponseEntity searchBySeller(
+    @PostMapping("/healthcare_pharmacy/search_by_store_pickup")
+    public ResponseEntity searchByStorePickup(
             @RequestHeader HttpHeaders headers,
             @RequestBody ClientSearchRequest request) {
-        var response = bapApplicationService.searchBySeller(request, headers);
+        var response = bapApplicationService.generateSearchRequest(request, headers);
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/healthcare_pharmacy/search_by_sku_code")
+    public ResponseEntity searchBySkuCode(
+            @RequestHeader HttpHeaders headers,
+            @RequestBody ClientSearchRequest request) {
+        var response = bapApplicationService.generateSearchRequest(request, headers);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/healthcare_pharmacy/search_by_product_name")
+    public ResponseEntity searchByProductName(
+            @RequestHeader HttpHeaders headers,
+            @RequestBody ClientSearchRequest request) {
+        var response = bapApplicationService.generateSearchRequest(request, headers);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/healthcare_pharmacy/search_by_product_price")
+    public ResponseEntity searchByProductPrice(
+            @RequestHeader HttpHeaders headers,
+            @RequestBody ClientSearchRequest request) {
+        var response = bapApplicationService.generateSearchRequest(request, headers);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/healthcare_pharmacy/view_provider_catalog")
+    public ResponseEntity getProvideCatalog(
+            @RequestHeader HttpHeaders headers,
+            @RequestBody ClientSearchRequest request) {
+        var response = bapApplicationService.generateSearchRequest(request, headers);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/healthcare_pharmacy/search_store_name")
+    public ResponseEntity searchByStoreName(
+            @RequestHeader HttpHeaders headers,
+            @RequestBody ClientSearchRequest request) {
+        var response = bapApplicationService.generateSearchRequest(request, headers);
+        return ResponseEntity.ok(response);
+    }
 
     @PostMapping("/healthcare_pharmacy/add_items")
     public ResponseEntity addItems(
             @RequestHeader HttpHeaders headers,
             @RequestBody ClientSelectRequest request) {
-        var response = bapApplicationService.addSelectedItems(request, headers);
+        var response = bapApplicationService.generateSelectRequest(request, headers);
         return ResponseEntity.ok(response);
     }
 
@@ -53,12 +92,20 @@ public class HealthCarePharmacyApiController {
     public ResponseEntity addBillingDetails(
             @RequestHeader HttpHeaders headers,
             @RequestBody ClientInitRequest request) {
-        var response = bapApplicationService.addBillingDetails(request, headers);
+        var response = bapApplicationService.initializeOrder(request, headers);
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/healthcare_pharmacy/confirm_order")
-    public ResponseEntity confirmOrder(
+    @PostMapping("/healthcare_pharmacy/confirm_prepaird_order")
+    public ResponseEntity confirmPrepaidOrder(
+            @RequestHeader HttpHeaders headers,
+            @RequestBody ClientConfirmOrderRequest request) {
+        var response = bapApplicationService.confirmOrder(request, headers);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/healthcare_pharmacy/confirm_postpaid_order")
+    public ResponseEntity confirmPostpaidOrder(
             @RequestHeader HttpHeaders headers,
             @RequestBody ClientConfirmOrderRequest request) {
         var response = bapApplicationService.confirmOrder(request, headers);
@@ -81,8 +128,40 @@ public class HealthCarePharmacyApiController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/healthcare_pharmacy/update_billing")
+    @PostMapping("/healthcare_pharmacy/update_billing_details")
     public ResponseEntity updateBillingDetails(
+            @RequestHeader HttpHeaders headers,
+            @RequestBody ClientUpdateOrderRequest request) {
+        var response = bapApplicationService.updateOrder(request, headers);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/healthcare_pharmacy/update_quantity")
+    public ResponseEntity updateItemQuantity(
+            @RequestHeader HttpHeaders headers,
+            @RequestBody ClientUpdateOrderRequest request) {
+        var response = bapApplicationService.updateOrder(request, headers);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/healthcare_pharmacy/add_item")
+    public ResponseEntity addItem(
+            @RequestHeader HttpHeaders headers,
+            @RequestBody ClientUpdateOrderRequest request) {
+        var response = bapApplicationService.updateOrder(request, headers);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/healthcare_pharmacy/remove_item")
+    public ResponseEntity removeItem(
+            @RequestHeader HttpHeaders headers,
+            @RequestBody ClientUpdateOrderRequest request) {
+        var response = bapApplicationService.updateOrder(request, headers);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/healthcare_pharmacy/update_shipping_details")
+    public ResponseEntity updateShippingDetails(
             @RequestHeader HttpHeaders headers,
             @RequestBody ClientUpdateOrderRequest request) {
         var response = bapApplicationService.updateOrder(request, headers);
@@ -97,16 +176,32 @@ public class HealthCarePharmacyApiController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/healthcare_pharmacy/rate")
-    public ResponseEntity rate(
+    @PostMapping("/healthcare_pharmacy/rate_delivery")
+    public ResponseEntity rateDelivery(
             @RequestHeader HttpHeaders headers,
             @RequestBody ClientRatingRequest request) {
         var response = bapApplicationService.rateOrder(request, headers);
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/healthcare_pharmacy/get_support")
-    public ResponseEntity getSupport(
+    @PostMapping("/healthcare_pharmacy/rate_pharmacy")
+    public ResponseEntity ratePharmacy(
+            @RequestHeader HttpHeaders headers,
+            @RequestBody ClientRatingRequest request) {
+        var response = bapApplicationService.rateOrder(request, headers);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/healthcare_pharmacy/contact_delivery")
+    public ResponseEntity contactDelivery(
+            @RequestHeader HttpHeaders headers,
+            @RequestBody ClientSupportRequest request) {
+        var response = bapApplicationService.support(request, headers);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/healthcare_pharmacy/contact_store")
+    public ResponseEntity contactStore(
             @RequestHeader HttpHeaders headers,
             @RequestBody ClientSupportRequest request) {
         var response = bapApplicationService.support(request, headers);
